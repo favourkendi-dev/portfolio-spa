@@ -32,7 +32,7 @@ function RegisterPage() {
     if (password.length >= 12) strength += 1;
     if (/[a-z]/.test(password) && /[A-Z]/.test(password)) strength += 1;
     if (/\d/.test(password)) strength += 1;
-    if (/[!@#$%^&*()_+-=[\]{};':"\\|,<>/?]/.test(password)) strength += 1;
+    if (/[!@#$%^&*()_+\-=[\]{};':"\\|,<>/?]/.test(password)) strength += 1;
     return strength;
   };
 

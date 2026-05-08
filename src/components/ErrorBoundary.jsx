@@ -16,15 +16,11 @@ class ErrorBoundary extends Component {
     return { hasError: true };
   }
 
-  componentDidCatch(error, errorInfo) {
+  componentDidCatch(_error, _errorInfo) {
     this.setState({
-      error,
-      errorInfo,
+      error: _error,
+      errorInfo: _errorInfo,
     });
-
-    if (process.env.NODE_ENV === 'development') {
-      console.error('ErrorBoundary caught an error:', error, errorInfo);
-    }
 
     toast.error('Something went wrong. Please refresh the page.');
   }

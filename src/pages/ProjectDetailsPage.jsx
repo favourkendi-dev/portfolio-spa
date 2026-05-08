@@ -99,7 +99,7 @@ function ProjectDetailsPage() {
               Project Not Found
             </h1>
             <p className="mt-4 text-sm text-slate-600 dark:text-slate-300">
-              The project you're looking for doesn't exist.
+              The project you&apos;re looking for doesn&apos;t exist.
             </p>
             <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center">
               <button

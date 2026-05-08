@@ -1,4 +1,4 @@
-import PropTypes from 'prop-types';
+﻿import PropTypes from 'prop-types';
 import { Link } from 'react-router-dom';
 import { FiBookmark } from 'react-icons/fi';
 import { FaBookmark } from 'react-icons/fa';
@@ -17,13 +17,23 @@ function ProjectCard({
     imageUrl,
     createdAt,
     userId,
+    category,
   } = project;
 
-  const formattedDate = new Date(createdAt).toLocaleDateString('en-US', {
+  const rawDate = createdAt && typeof createdAt === 'object' && typeof createdAt.toDate === 'function'
+    ? createdAt.toDate()
+    : new Date(createdAt);
+
+  const formattedDate = new Intl.DateTimeFormat('en-US', {
     year: 'numeric',
     month: 'short',
     day: 'numeric',
-  });
+  }).format(rawDate);
+
+  const projectUrl = project.liveUrl || project.externalUrl || project.projectUrl;
+  const badge = category || 'Showcase';
+  const creator = userId || 'Portfolio Showcase';
+  const ariaLabel = projectUrl ? `Open ${title}` : `View details for ${title}`;
 
   const handleBookmark = (e) => {
     e.preventDefault();
@@ -42,68 +52,91 @@ function ProjectCard({
   };
 
   return (
-    <Link
-      to={`/projects/${id}`}
-      className="group relative overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm transition-all duration-300 hover:shadow-lg hover:border-indigo-200"
-      aria-label={`View ${title} project details`}
-    >
-      <div className="relative h-48 overflow-hidden bg-gradient-to-br from-gray-100 to-gray-50">
+    <div className="group relative overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm transition duration-300 ease-out hover:-translate-y-0.5 hover:shadow-2xl dark:border-slate-700 dark:bg-slate-900">
+      {projectUrl ? (
+        <a
+          href={projectUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label={ariaLabel}
+          className="absolute inset-0 z-10"
+        />
+      ) : (
+        <Link
+          to={`/projects/${id}`}
+          aria-label={ariaLabel}
+          className="absolute inset-0 z-10"
+        />
+      )}
+
+      <div className="relative h-56 overflow-hidden bg-slate-100 dark:bg-slate-800">
         <img
           src={imageUrl}
           alt={title}
-          className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
           loading="lazy"
+          className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
         />
-        <div className="absolute inset-0 bg-black bg-opacity-0 transition-all duration-300 group-hover:bg-opacity-10" />
+        <div className="absolute inset-0 bg-gradient-to-t from-slate-950/70 via-transparent to-transparent opacity-0 transition duration-500 group-hover:opacity-100" />
+
+        <span className="absolute left-4 top-4 z-20 inline-flex items-center rounded-full border border-white/20 bg-slate-950/80 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-white shadow-xl shadow-slate-950/20">
+          {badge}
+        </span>
 
         <button
           type="button"
           onClick={handleBookmark}
-          className="absolute top-3 right-3 rounded-full bg-white bg-opacity-90 p-2 shadow-md transition-all duration-200 hover:bg-opacity-100 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-          aria-label={isBookmarked ? 'Remove bookmark' : 'Add bookmark'}
+          aria-label={isBookmarked ? 'Remove from bookmarks' : 'Add to bookmarks'}
           aria-pressed={isBookmarked}
+          className="absolute right-4 top-4 z-20 inline-flex h-10 w-10 items-center justify-center rounded-full bg-white/90 text-slate-800 shadow-lg transition duration-200 hover:scale-105 hover:bg-white dark:bg-slate-900 dark:text-slate-100"
         >
           {isBookmarked ? (
-            <FaBookmark className="h-4 w-4 text-indigo-600" />
+            <FaBookmark className="h-5 w-5 text-indigo-600" />
           ) : (
-            <FiBookmark className="h-4 w-4 text-gray-600" />
+            <FiBookmark className="h-5 w-5" />
           )}
         </button>
+
+        {isOwner && (
+          <button
+            type="button"
+            onClick={handleDelete}
+            aria-label={`Delete ${title} project`}
+            className="absolute right-4 bottom-4 z-20 inline-flex rounded-full bg-red-600 px-3 py-2 text-xs font-semibold text-white transition duration-200 hover:bg-red-700"
+          >
+            Delete
+          </button>
+        )}
       </div>
 
-      <div className="flex flex-1 flex-col p-4">
-        <h2 className="line-clamp-2 text-lg font-semibold text-gray-900 group-hover:text-indigo-600 transition-colors duration-200">
-          {title}
-        </h2>
+      <div className="space-y-4 px-5 py-6">
+        <div className="text-sm font-medium uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400">
+          Premium showcase
+        </div>
 
-        <p className="mt-2 line-clamp-2 flex-1 text-sm text-gray-600">
-          {description}
-        </p>
+        <div className="space-y-2">
+          <h2 className="text-xl font-semibold text-slate-900 transition-colors duration-200 group-hover:text-indigo-600 dark:text-white">
+            {title}
+          </h2>
+          <p className="line-clamp-3 text-sm leading-6 text-slate-600 dark:text-slate-300">
+            {description}
+          </p>
+        </div>
 
-        <div className="mt-4 flex items-center justify-between border-t border-gray-100 pt-4">
-          <div className="flex items-center gap-2">
-            <div className="h-8 w-8 rounded-full bg-gradient-to-br from-indigo-400 to-purple-500" />
-            <div className="text-xs">
-              <p className="font-medium text-gray-900">
-                {userId || 'Creator'}
-              </p>
-              <p className="text-gray-500">{formattedDate}</p>
-            </div>
+        <div className="flex flex-col gap-3 border-t border-slate-200 pt-4 text-sm dark:border-slate-700 sm:flex-row sm:items-center sm:justify-between">
+          <div className="min-w-0">
+            <p className="truncate text-sm font-semibold text-slate-900 dark:text-white">
+              {creator}
+            </p>
+            <p className="text-xs text-slate-500 dark:text-slate-400">
+              {formattedDate}
+            </p>
           </div>
-
-          {isOwner && (
-            <button
-              type="button"
-              onClick={handleDelete}
-              className="rounded px-2 py-1 text-xs font-medium text-red-600 transition-colors duration-200 hover:bg-red-50"
-              aria-label={`Delete ${title} project`}
-            >
-              Delete
-            </button>
-          )}
+          <div className="rounded-full border border-slate-200 bg-slate-100 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-slate-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300">
+            {badge}
+          </div>
         </div>
       </div>
-    </Link>
+    </div>
   );
 }
 
@@ -113,9 +146,17 @@ ProjectCard.propTypes = {
     title: PropTypes.string.isRequired,
     description: PropTypes.string,
     imageUrl: PropTypes.string.isRequired,
-    createdAt: PropTypes.string.isRequired,
+    createdAt: PropTypes.oneOfType([
+      PropTypes.string,
+      PropTypes.number,
+      PropTypes.instanceOf(Date),
+      PropTypes.object,
+    ]).isRequired,
     userId: PropTypes.string,
     category: PropTypes.string,
+    liveUrl: PropTypes.string,
+    externalUrl: PropTypes.string,
+    projectUrl: PropTypes.string,
   }).isRequired,
   onBookmark: PropTypes.func.isRequired,
   onDelete: PropTypes.func,

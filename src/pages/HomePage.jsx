@@ -1,12 +1,11 @@
-﻿import PropTypes from 'prop-types';
-import { useState, useMemo } from 'react';
+﻿import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
-import { FiBookmark, FiArrowRight, FiFilter } from 'react-icons/fi';
-import { FaBookmark } from 'react-icons/fa';
+import { FiArrowRight, FiFilter } from 'react-icons/fi';
 import Navbar from '../components/Navbar';
 import SearchBar, { useSearchFilter } from '../components/SearchBar';
 import DashboardClock from '../components/DashboardClock';
+import ProjectList from '../components/ProjectList';
 import useProjects from '../hooks/useProjects';
 import { useBookmarks } from '../context/BookmarkContext';
 import { useAuth } from '../context/AuthContext';
@@ -55,110 +54,6 @@ function EmptyState() {
   );
 }
 
-function ProjectCard({
-  project,
-  isBookmarked,
-  onBookmark,
-  onDelete,
-  isOwner,
-}) {
-  const formattedDate = new Date(project.createdAt).toLocaleDateString(
-    'en-US',
-    {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-    }
-  );
-
-  const handleBookmarkClick = (e) => {
-    e.preventDefault();
-    onBookmark(project.id);
-  };
-
-  const handleDeleteClick = async (e) => {
-    e.preventDefault();
-    if (window.confirm('Are you sure you want to delete this project?')) {
-      onDelete(project.id);
-    }
-  };
-
-  return (
-    <Link
-      to={`/projects/${project.id}`}
-      className="group relative overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm transition-all duration-300 hover:shadow-lg hover:border-indigo-200 dark:border-slate-700 dark:bg-slate-800"
-    >
-      <div className="relative h-48 overflow-hidden bg-gradient-to-br from-gray-100 to-gray-50 dark:from-slate-700 dark:to-slate-600">
-        <img
-          src={project.imageUrl}
-          alt={project.title}
-          className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
-          loading="lazy"
-        />
-        <div className="absolute inset-0 bg-black bg-opacity-0 transition-all duration-300 group-hover:bg-opacity-10" />
-        <button
-          type="button"
-          onClick={handleBookmarkClick}
-          className="absolute right-3 top-3 rounded-full bg-white p-2 shadow-sm transition-all duration-200 hover:scale-110 dark:bg-slate-700 dark:text-white"
-          aria-label={isBookmarked ? 'Remove from bookmarks' : 'Add to bookmarks'}
-        >
-          {isBookmarked ? (
-            <FaBookmark className="h-4 w-4 text-indigo-600" />
-          ) : (
-            <FiBookmark className="h-4 w-4 text-gray-600 dark:text-slate-300" />
-          )}
-        </button>
-        {isOwner && (
-          <button
-            type="button"
-            onClick={handleDeleteClick}
-            className="absolute right-3 bottom-3 rounded-full bg-red-600 p-2 text-white shadow-sm transition-all duration-200 hover:bg-red-700 hover:scale-110"
-            aria-label="Delete project"
-          >
-            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-            </svg>
-          </button>
-        )}
-      </div>
-      <div className="p-4">
-        <h3 className="font-semibold text-gray-900 dark:text-white line-clamp-2">
-          {project.title}
-        </h3>
-        <p className="mt-2 text-sm text-gray-600 dark:text-slate-300 line-clamp-3">
-          {project.description}
-        </p>
-        <div className="mt-4 flex items-center justify-between">
-          <span className="text-xs text-gray-500 dark:text-slate-400">
-            {formattedDate}
-          </span>
-          <div className="flex items-center gap-1">
-            <div className="h-6 w-6 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600" />
-            <span className="text-xs text-gray-500 dark:text-slate-400">
-              Creator
-            </span>
-          </div>
-        </div>
-      </div>
-    </Link>
-  );
-}
-
-ProjectCard.propTypes = {
-  project: PropTypes.shape({
-    id: PropTypes.string.isRequired,
-    title: PropTypes.string.isRequired,
-    description: PropTypes.string.isRequired,
-    imageUrl: PropTypes.string.isRequired,
-    createdAt: PropTypes.string.isRequired,
-    userId: PropTypes.string.isRequired,
-  }).isRequired,
-  isBookmarked: PropTypes.bool.isRequired,
-  onBookmark: PropTypes.func.isRequired,
-  onDelete: PropTypes.func.isRequired,
-  isOwner: PropTypes.bool.isRequired,
-};
-
 function HomePage() {
   const { currentUser } = useAuth();
   const { projects, loading, error, deleteProject } = useProjects();
@@ -166,6 +61,7 @@ function HomePage() {
   const { query, setQuery, filteredData } = useSearchFilter(projects, [
     'title',
     'description',
+    'category',
   ]);
 
   const categories = useMemo(() => {
@@ -202,7 +98,7 @@ function HomePage() {
       <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
         {currentUser ? (
           <div className="mb-8">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
               <div>
                 <h1 className="text-3xl font-bold text-slate-900 dark:text-white">
                   Welcome back!
@@ -272,18 +168,13 @@ function HomePage() {
         ) : filteredByCategory.length === 0 ? (
           <EmptyState />
         ) : (
-          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {filteredByCategory.map((project) => (
-              <ProjectCard
-                key={project.id}
-                project={project}
-                isBookmarked={bookmarkedIds.includes(project.id)}
-                onBookmark={toggleBookmark}
-                onDelete={handleDelete}
-                isOwner={currentUser?.uid === project.userId}
-              />
-            ))}
-          </div>
+          <ProjectList
+            projects={filteredByCategory}
+            onBookmark={toggleBookmark}
+            onDelete={handleDelete}
+            bookmarkedIds={bookmarkedIds}
+            currentUser={currentUser}
+          />
         )}
       </main>
     </div>
