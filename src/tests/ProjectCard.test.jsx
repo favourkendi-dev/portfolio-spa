@@ -7,6 +7,9 @@ const mockProject = {
   title: 'Test Project',
   description: 'This is a test project description',
   imageUrl: 'https://images.unsplash.com/photo-1',
+  createdAt: new Date('2024-01-01'),
+  userId: 'testuser',
+  category: 'Web Development',
 };
 
 const renderComponent = (props = {}) => {
@@ -40,21 +43,22 @@ describe('ProjectCard', () => {
     renderComponent();
 
     const bookmarkButton = screen.getByRole('button', {
-      name: /bookmark test project/i,
+      name: /Add to bookmarks/i,
     });
 
     expect(bookmarkButton).toBeInTheDocument();
-    expect(bookmarkButton).toHaveTextContent('Bookmark');
+    expect(bookmarkButton).toHaveAttribute('aria-pressed', 'false');
   });
 
   test('shows bookmarked state correctly', () => {
     renderComponent({ isBookmarked: true });
 
     const bookmarkButton = screen.getByRole('button', {
-      name: /remove test project from bookmarks/i,
+      name: /Remove from bookmarks/i,
     });
 
-    expect(bookmarkButton).toHaveTextContent('Bookmarked');
+    expect(bookmarkButton).toBeInTheDocument();
+    expect(bookmarkButton).toHaveAttribute('aria-pressed', 'true');
   });
 
   test('calls onBookmark when bookmark button is clicked', () => {
@@ -63,7 +67,7 @@ describe('ProjectCard', () => {
     renderComponent({ onBookmark: onBookmarkMock });
 
     const bookmarkButton = screen.getByRole('button', {
-      name: /bookmark test project/i,
+      name: /Add to bookmarks/i,
     });
 
     fireEvent.click(bookmarkButton);
@@ -74,11 +78,12 @@ describe('ProjectCard', () => {
 
   test('calls onDelete when delete button is clicked', () => {
     const onDeleteMock = jest.fn();
+    window.confirm = jest.fn(() => true); // Mock confirm to return true
 
     renderComponent({ onDelete: onDeleteMock });
 
     const deleteButton = screen.getByRole('button', {
-      name: /delete test project/i,
+      name: /Delete Test Project/i,
     });
 
     fireEvent.click(deleteButton);
@@ -91,7 +96,7 @@ describe('ProjectCard', () => {
     renderComponent({ isOwner: false });
 
     const deleteButton = screen.queryByRole('button', {
-      name: /delete test project/i,
+      name: /Delete Test Project/i,
     });
 
     expect(deleteButton).not.toBeInTheDocument();

@@ -7,8 +7,8 @@ function ProjectCard({
   project,
   onBookmark,
   onDelete,
-  isBookmarked,
-  isOwner,
+  isBookmarked = false,
+  isOwner = false,
 }) {
   const {
     id,
@@ -22,7 +22,9 @@ function ProjectCard({
 
   const rawDate = createdAt && typeof createdAt === 'object' && typeof createdAt.toDate === 'function'
     ? createdAt.toDate()
-    : new Date(createdAt);
+    : createdAt && !isNaN(new Date(createdAt).getTime())
+    ? new Date(createdAt)
+    : new Date();
 
   const formattedDate = new Intl.DateTimeFormat('en-US', {
     year: 'numeric',
@@ -100,7 +102,7 @@ function ProjectCard({
           <button
             type="button"
             onClick={handleDelete}
-            aria-label={`Delete ${title} project`}
+            aria-label={`Delete ${title}`}
             className="absolute right-4 bottom-4 z-20 inline-flex rounded-full bg-red-600 px-3 py-2 text-xs font-semibold text-white transition duration-200 hover:bg-red-700"
           >
             Delete
@@ -162,12 +164,6 @@ ProjectCard.propTypes = {
   onDelete: PropTypes.func,
   isBookmarked: PropTypes.bool,
   isOwner: PropTypes.bool,
-};
-
-ProjectCard.defaultProps = {
-  onDelete: null,
-  isBookmarked: false,
-  isOwner: false,
 };
 
 export default ProjectCard;
