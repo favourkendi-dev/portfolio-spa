@@ -1,13 +1,23 @@
 import PropTypes from 'prop-types';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { IoClose } from 'react-icons/io5';
 
 const ALLOWED_FILE_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
-const MAX_FILE_SIZE = 10 * 1024 * 1024;
+const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB strict limit
 
-function FileUpload({ file, onFileChange, onValidationError, error, disabled }) {
+function FileUpload({ file = null, onFileChange, onValidationError, error = '', disabled = false }) {
   const [dragActive, setDragActive] = useState(false);
 
   const acceptedTypes = useMemo(() => ALLOWED_FILE_TYPES.join(','), []);
+  const previewUrl = useMemo(() => (file ? URL.createObjectURL(file) : ''), [file]);
+
+  useEffect(() => {
+    return () => {
+      if (previewUrl) {
+        URL.revokeObjectURL(previewUrl);
+      }
+    };
+  }, [previewUrl]);
 
   const validateFile = (selectedFile) => {
     if (!selectedFile) {
@@ -23,7 +33,7 @@ function FileUpload({ file, onFileChange, onValidationError, error, disabled }) 
     }
 
     if (selectedFile.size > MAX_FILE_SIZE) {
-      return 'Image size must be 10MB or smaller.';
+      return 'Image size must be 5MB or smaller.';
     }
 
     return '';
@@ -101,28 +111,51 @@ function FileUpload({ file, onFileChange, onValidationError, error, disabled }) 
           aria-describedby={error ? 'project-image-error' : undefined}
         />
 
-        <div className="pointer-events-none">
-          {file ? (
-            <div className="space-y-2 text-left">
-              <p className="text-sm font-semibold text-gray-900 dark:text-white">
-                Selected file
-              </p>
-              <p className="text-sm text-gray-700 dark:text-slate-300">{file.name}</p>
-              <p className="text-sm text-gray-600 dark:text-slate-400">
-                {`${(file.size / 1024 / 1024).toFixed(2)} MB`}
-              </p>
+        {file ? (
+          <div className="space-y-4 text-left">
+            <div className="overflow-hidden rounded-2xl border border-slate-200 bg-slate-50 dark:border-slate-600 dark:bg-slate-900">
+              <img
+                src={previewUrl}
+                alt={file.name}
+                className="h-48 w-full object-cover"
+              />
             </div>
-          ) : (
-            <>
-              <p className="text-sm font-semibold text-gray-900 dark:text-white">
-                Drag & drop an image here or click to select a file
-              </p>
-              <p className="text-sm text-gray-600 dark:text-slate-400">
-                JPG, PNG, and WEBP only. Maximum size 10MB.
-              </p>
-            </>
-          )}
-        </div>
+            <div className="flex items-start justify-between">
+              <div className="flex-1">
+                <p className="text-sm font-semibold text-gray-900 dark:text-white">
+                  {file.name}
+                </p>
+                <p className="text-sm text-gray-700 dark:text-slate-300">
+                  {`${(file.size / 1024 / 1024).toFixed(2)} MB`}
+                </p>
+              </div>
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    onFileChange(null);
+                  }}
+                  title="Remove image"
+                  aria-label="Remove image"
+                  className="inline-flex items-center justify-center rounded-lg bg-red-100 p-2 text-red-600 transition-colors duration-200 hover:bg-red-200 dark:bg-red-900/30 dark:text-red-400 dark:hover:bg-red-900/50"
+                >
+                  <IoClose className="h-5 w-5" />
+                </button>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <>
+            <p className="text-sm font-semibold text-gray-900 dark:text-white">
+              Drag & drop an image here or click to select a file
+            </p>
+            <p className="text-sm text-gray-600 dark:text-slate-400">
+              JPG, PNG, and WEBP only. Maximum size 5MB.
+            </p>
+          </>
+        )}
       </div>
 
       {error && (
@@ -140,12 +173,6 @@ FileUpload.propTypes = {
   onValidationError: PropTypes.func.isRequired,
   error: PropTypes.string,
   disabled: PropTypes.bool,
-};
-
-FileUpload.defaultProps = {
-  file: null,
-  error: '',
-  disabled: false,
 };
 
 export default FileUpload;

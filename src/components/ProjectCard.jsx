@@ -14,6 +14,7 @@ function ProjectCard({
     id,
     title,
     description,
+    image,
     imageUrl,
     createdAt,
     userId,
@@ -73,7 +74,7 @@ function ProjectCard({
 
       <div className="relative h-56 overflow-hidden bg-slate-100 dark:bg-slate-800">
         <img
-          src={imageUrl}
+          src={image || imageUrl}
           alt={title}
           loading="lazy"
           className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
@@ -148,7 +149,8 @@ ProjectCard.propTypes = {
     id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
     title: PropTypes.string.isRequired,
     description: PropTypes.string,
-    imageUrl: PropTypes.string.isRequired,
+    imageUrl: PropTypes.string,
+    image: PropTypes.string,
     createdAt: PropTypes.oneOfType([
       PropTypes.string,
       PropTypes.number,

@@ -6,6 +6,7 @@ import ProjectForm from '../components/ProjectForm';
 import FileUpload from '../components/FileUpload';
 import { useAuth } from '../context/AuthContext';
 import { createProjectWithImage } from '../services/projectService';
+import { uploadImageToCloudinary } from '../services/cloudinaryService';
 
 function AddProjectPage() {
   const navigate = useNavigate();
@@ -39,14 +40,6 @@ function AddProjectPage() {
       validationErrors.image = 'Project image is required';
     }
 
-    if (imageFile && !/^image\/(jpeg|png|webp)$/.test(imageFile.type)) {
-      validationErrors.image = 'Allowed file types: JPG, PNG, WEBP';
-    }
-
-    if (imageFile && imageFile.size > 10 * 1024 * 1024) {
-      validationErrors.image = 'Image must be 10MB or smaller';
-    }
-
     setErrors(validationErrors);
     return Object.keys(validationErrors).length === 0;
   };
@@ -62,21 +55,16 @@ function AddProjectPage() {
 
   const handleFileChange = (selectedFile) => {
     setImageFile(selectedFile);
-
     if (errors.image) {
       setErrors((previousErrors) => ({ ...previousErrors, image: '' }));
     }
-  };
-
-  const handleValidationError = (message) => {
-    setErrors((previousErrors) => ({ ...previousErrors, image: message }));
   };
 
   const handleSubmit = async (event) => {
     event.preventDefault();
 
     if (!currentUser) {
-      toast.error('You must be signed in to create a project.');
+      toast.error('Please sign in to create a project.');
       return;
     }
 
@@ -87,21 +75,36 @@ function AddProjectPage() {
     setSubmitting(true);
 
     try {
+      // Upload image to Cloudinary
+      toast.loading('Uploading image...');
+      const imageUrl = await uploadImageToCloudinary(imageFile);
+
+      // Save project to Firestore with Cloudinary URL
       await createProjectWithImage({
         userId: currentUser.uid,
         title: formData.title.trim(),
         description: formData.description.trim(),
         url: formData.url.trim() || null,
-        file: imageFile,
+        imageUrl,
       });
 
-      toast.success('Project created successfully');
-      navigate('/');
+      toast.dismiss();
+      toast.success('Project created successfully!');
+
+      // Reset form completely
+      setFormData({ title: '', description: '', url: '' });
+      setImageFile(null);
+      setErrors({});
+
+      // Navigate after brief delay to let success toast show
+      setTimeout(() => navigate('/'), 1500);
     } catch (error) {
-      toast.error(error.message || 'Failed to create project');
+      toast.dismiss();
+      const errorMessage = error.message || 'Unable to create project. Please try again.';
+      toast.error(errorMessage);
       setErrors((previousErrors) => ({
         ...previousErrors,
-        submit: error.message || 'Failed to create project',
+        submit: errorMessage,
       }));
     } finally {
       setSubmitting(false);
@@ -132,10 +135,34 @@ function AddProjectPage() {
             <FileUpload
               file={imageFile}
               onFileChange={handleFileChange}
-              onValidationError={handleValidationError}
+              onValidationError={(message) => setErrors((previousErrors) => ({ ...previousErrors, image: message }))}
               error={errors.image}
               disabled={submitting}
             />
+            <div>
+              <label htmlFor="imagePath" className="mb-2 block font-medium text-gray-900 dark:text-white">
+                Optional Manual Image Path
+              </label>
+              <input
+                id="imagePath"
+                name="imagePath"
+                type="text"
+                value={formData.imagePath}
+                onChange={handleChange}
+                placeholder="/uploads/your-image.jpg"
+                className="w-full rounded-lg border border-gray-300 bg-white px-4 py-3 text-gray-900 placeholder-gray-400 transition-colors duration-200 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200 dark:border-slate-600 dark:bg-slate-700 dark:text-white dark:placeholder-slate-400 dark:focus:ring-indigo-900"
+                aria-invalid={Boolean(errors.image)}
+                aria-describedby={errors.image ? 'image-error' : undefined}
+              />
+              <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+                Optional. If your image already exists in the uploads folder, enter its path starting with <span className="font-mono">/uploads/</span> (e.g., <span className="font-mono">/uploads/my-project.jpg</span>).
+              </p>
+              {errors.image && (
+                <p id="image-error" className="mt-1 text-sm text-red-600 dark:text-red-400">
+                  {errors.image}
+                </p>
+              )}
+            </div>
           </ProjectForm>
         </div>
       </main>

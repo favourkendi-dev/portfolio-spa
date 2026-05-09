@@ -6,7 +6,7 @@ function ProjectForm({
   onChange,
   onSubmit,
   submitting,
-  children,
+  children = null,
 }) {
   return (
     <form onSubmit={onSubmit} className="space-y-6" noValidate>
@@ -92,6 +92,7 @@ ProjectForm.propTypes = {
     title: PropTypes.string.isRequired,
     description: PropTypes.string.isRequired,
     url: PropTypes.string,
+    imagePath: PropTypes.string,
   }).isRequired,
   errors: PropTypes.shape({
     title: PropTypes.string,
@@ -104,10 +105,6 @@ ProjectForm.propTypes = {
   onSubmit: PropTypes.func.isRequired,
   submitting: PropTypes.bool.isRequired,
   children: PropTypes.node,
-};
-
-ProjectForm.defaultProps = {
-  children: null,
 };
 
 export default ProjectForm;

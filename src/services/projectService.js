@@ -1,74 +1,26 @@
-import { getDownloadURL, ref, uploadBytes } from 'firebase/storage';
 import { collection, addDoc, getDocs, doc, getDoc, updateDoc, deleteDoc } from 'firebase/firestore';
-import imageCompression from 'browser-image-compression';
-import { storage, db } from './firebase';
-
-const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
-const MAX_IMAGE_BYTES = 10 * 1024 * 1024;
-
-function validateProjectImage(file) {
-  if (!file) {
-    throw new Error('Project image is required.');
-  }
-
-  if (!(file instanceof File)) {
-    throw new Error('Invalid image file.');
-  }
-
-  if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
-    throw new Error('Project image must be a JPG, PNG, or WEBP file.');
-  }
-
-  if (file.size > MAX_IMAGE_BYTES) {
-    throw new Error('Project image must be 10MB or smaller.');
-  }
-
-  return true;
-}
-
-async function compressImage(file) {
-  const options = {
-    maxSizeMB: 1,
-    maxWidthOrHeight: 1920,
-    useWebWorker: true,
-  };
-
-  try {
-    const compressedFile = await imageCompression(file, options);
-    return compressedFile;
-  } catch (error) {
-    throw new Error('Failed to compress image.');
-  }
-}
-
-function buildStoragePath(userId, fileName) {
-  const safeFileName = encodeURIComponent(fileName.trim().replace(/\s+/g, '-'));
-  return `projects/${userId}/${Date.now()}-${safeFileName}`;
-}
-
-export async function uploadProjectImage(userId, file) {
-  validateProjectImage(file);
-
-  const compressedFile = await compressImage(file);
-
-  const storagePath = buildStoragePath(userId, compressedFile.name);
-  const storageRef = ref(storage, storagePath);
-
-  try {
-    await uploadBytes(storageRef, compressedFile);
-    const imageUrl = await getDownloadURL(storageRef);
-    return imageUrl;
-  } catch (error) {
-    throw new Error(error.message || 'Failed to upload project image.');
-  }
-}
+import { db } from './firebase';
 
 export async function createProjectRecord(projectPayload) {
   try {
+    // Verify payload has required fields
+    if (!projectPayload.title || !projectPayload.description || !projectPayload.image || !projectPayload.userId) {
+      throw new Error('Invalid project data. Please ensure all required fields are filled.');
+    }
     const docRef = await addDoc(collection(db, 'projects'), projectPayload);
     return { id: docRef.id, ...projectPayload };
   } catch (error) {
-    throw new Error(error.message || 'Failed to save project.');
+    // User-safe error messages for Firestore
+    if (error.code === 'permission-denied') {
+      throw new Error('Unable to save project. Please check that you are signed in and try again.');
+    }
+    if (error.code === 'unauthenticated') {
+      throw new Error('Your session has expired. Please sign in again to create projects.');
+    }
+    if (error.code === 'not-found') {
+      throw new Error('Service temporarily unavailable. Please try again.');
+    }
+    throw new Error(error.message || 'Unable to save project. Please try again.');
   }
 }
 
@@ -118,25 +70,54 @@ export async function deleteProject(id) {
   }
 }
 
-export async function createProjectWithImage({ userId, title, description, url, file }) {
+export async function createProjectWithImage({ userId, title, description, url, imageUrl }) {
+  // Validate authentication
   if (!userId) {
-    throw new Error('Authenticated user is required to create a project.');
+    throw new Error('Your session has expired. Please sign in to create a project.');
   }
 
+  // Validate title
   if (!title?.trim()) {
     throw new Error('Project title is required.');
   }
 
+  if (title.trim().length > 200) {
+    throw new Error('Project title must be 200 characters or less.');
+  }
+
+  // Validate description
   if (!description?.trim()) {
     throw new Error('Project description is required.');
   }
 
-  const imageUrl = await uploadProjectImage(userId, file);
+  if (description.trim().length > 2000) {
+    throw new Error('Project description must be 2000 characters or less.');
+  }
+
+  // Validate image URL (from Cloudinary upload)
+  if (!imageUrl || !imageUrl.trim()) {
+    throw new Error('Project image is required.');
+  }
+
+  try {
+    new URL(imageUrl.trim());
+  } catch {
+    throw new Error('Invalid image URL.');
+  }
+
+  // Validate URL if provided
+  if (url && url.trim()) {
+    try {
+      new URL(url.trim());
+    } catch {
+      throw new Error('Invalid project URL. Please provide a valid HTTP or HTTPS URL.');
+    }
+  }
 
   const payload = {
     title: title.trim(),
     description: description.trim(),
-    imageUrl,
+    image: imageUrl.trim(),
     userId,
     createdAt: new Date().toISOString(),
   };
@@ -145,5 +126,21 @@ export async function createProjectWithImage({ userId, title, description, url, 
     payload.url = url.trim();
   }
 
-  return createProjectRecord(payload);
+  try {
+    return await createProjectRecord(payload);
+  } catch (error) {
+    // Handle Firestore permission errors
+    if (error.code === 'permission-denied' || error.message?.includes('permission')) {
+      throw new Error('Unable to create project. Your account may not have permission. Please try again or contact support.');
+    }
+    // Handle auth errors
+    if (error.code === 'unauthenticated' || error.message?.includes('unauthenticated')) {
+      throw new Error('Your session has expired. Please sign in again.');
+    }
+    // Handle generic failures
+    if (error.message && !error.message.includes('Invalid') && !error.message.includes('required')) {
+      throw new Error('Unable to create project. Please try again.');
+    }
+    throw error;
+  }
 }
