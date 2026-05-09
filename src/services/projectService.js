@@ -118,7 +118,7 @@ export async function deleteProject(id) {
   }
 }
 
-export async function createProjectWithImage({ userId, title, description, file }) {
+export async function createProjectWithImage({ userId, title, description, url, file }) {
   if (!userId) {
     throw new Error('Authenticated user is required to create a project.');
   }
@@ -140,6 +140,10 @@ export async function createProjectWithImage({ userId, title, description, file 
     userId,
     createdAt: new Date().toISOString(),
   };
+
+  if (url && url.trim()) {
+    payload.url = url.trim();
+  }
 
   return createProjectRecord(payload);
 }

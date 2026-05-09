@@ -5,7 +5,9 @@ isRouteErrorResponse,
 Link,
 Outlet,
 useRouteError,
+Navigate,
 } from 'react-router-dom';
+import { useAuth } from './context/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
 
 const HomePage = lazy(() => import('./pages/HomePage'));
@@ -51,23 +53,29 @@ Reload page
 );
 }
 
-function RootLayout() {
-return (
-<Suspense fallback={<LoadingFallback />}>
-<Outlet />
-</Suspense>
-);
+function HomePageWrapper() {
+  const { currentUser, loading } = useAuth();
+
+  if (loading) {
+    return <LoadingFallback />;
+  }
+
+  if (!currentUser) {
+    return <Navigate to="/login" replace />;
+  }
+
+  return <HomePage />;
 }
 
 const router = createBrowserRouter([
 {
 path: '/',
-element: <RootLayout />,
+element: <Suspense fallback={<LoadingFallback />}><Outlet /></Suspense>,
 errorElement: <ErrorPage />,
 children: [
 {
 index: true,
-element: <HomePage />,
+element: <HomePageWrapper />,
 },
 {
 path: 'login',

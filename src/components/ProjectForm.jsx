@@ -52,6 +52,28 @@ function ProjectForm({
         )}
       </div>
 
+      <div>
+        <label htmlFor="url" className="mb-2 block font-medium text-gray-900 dark:text-white">
+          Project URL
+        </label>
+        <input
+          id="url"
+          name="url"
+          type="url"
+          value={formData.url || ''}
+          onChange={onChange}
+          placeholder="https://example.com"
+          className="w-full rounded-lg border border-gray-300 bg-white px-4 py-3 text-gray-900 placeholder-gray-400 transition-colors duration-200 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200 dark:border-slate-600 dark:bg-slate-700 dark:text-white dark:placeholder-slate-400 dark:focus:ring-indigo-900"
+          aria-invalid={Boolean(errors.url)}
+          aria-describedby={errors.url ? 'url-error' : undefined}
+        />
+        {errors.url && (
+          <p id="url-error" className="mt-1 text-sm text-red-600 dark:text-red-400">
+            {errors.url}
+          </p>
+        )}
+      </div>
+
       {children}
 
       <button
@@ -69,10 +91,12 @@ ProjectForm.propTypes = {
   formData: PropTypes.shape({
     title: PropTypes.string.isRequired,
     description: PropTypes.string.isRequired,
+    url: PropTypes.string,
   }).isRequired,
   errors: PropTypes.shape({
     title: PropTypes.string,
     description: PropTypes.string,
+    url: PropTypes.string,
     image: PropTypes.string,
     submit: PropTypes.string,
   }).isRequired,

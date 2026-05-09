@@ -32,7 +32,7 @@ function ProjectCard({
     day: 'numeric',
   }).format(rawDate);
 
-  const projectUrl = project.liveUrl || project.externalUrl || project.projectUrl;
+  const projectUrl = project.url || project.liveUrl || project.externalUrl || project.projectUrl;
   const badge = category || 'Showcase';
   const creator = userId || 'Portfolio Showcase';
   const ariaLabel = projectUrl ? `Open ${title}` : `View details for ${title}`;
@@ -89,6 +89,7 @@ function ProjectCard({
           onClick={handleBookmark}
           aria-label={isBookmarked ? 'Remove from bookmarks' : 'Add to bookmarks'}
           aria-pressed={isBookmarked}
+          title={isBookmarked ? 'Remove from bookmarks' : 'Add to bookmarks'}
           className="absolute right-4 top-4 z-20 inline-flex h-10 w-10 items-center justify-center rounded-full bg-white/90 text-slate-800 shadow-lg transition duration-200 hover:scale-105 hover:bg-white dark:bg-slate-900 dark:text-slate-100"
         >
           {isBookmarked ? (
@@ -156,6 +157,7 @@ ProjectCard.propTypes = {
     ]).isRequired,
     userId: PropTypes.string,
     category: PropTypes.string,
+    url: PropTypes.string,
     liveUrl: PropTypes.string,
     externalUrl: PropTypes.string,
     projectUrl: PropTypes.string,

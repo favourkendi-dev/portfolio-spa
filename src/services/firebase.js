@@ -1,5 +1,5 @@
 import { initializeApp, getApp, getApps } from 'firebase/app';
-import { getAuth, GoogleAuthProvider } from 'firebase/auth';
+import { getAuth, GoogleAuthProvider, setPersistence, browserLocalPersistence } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
 
@@ -40,6 +40,11 @@ const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 const storage = getStorage(app);
+
+// Set auth persistence to local to prevent token refresh issues
+setPersistence(auth, browserLocalPersistence).catch((error) => {
+  console.warn('Failed to set auth persistence:', error);
+});
 
 const googleProvider = new GoogleAuthProvider();
 googleProvider.setCustomParameters({

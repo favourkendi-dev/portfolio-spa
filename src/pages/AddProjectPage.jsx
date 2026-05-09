@@ -11,7 +11,7 @@ function AddProjectPage() {
   const navigate = useNavigate();
   const { currentUser } = useAuth();
 
-  const [formData, setFormData] = useState({ title: '', description: '' });
+  const [formData, setFormData] = useState({ title: '', description: '', url: '' });
   const [imageFile, setImageFile] = useState(null);
   const [errors, setErrors] = useState({});
   const [submitting, setSubmitting] = useState(false);
@@ -25,6 +25,14 @@ function AddProjectPage() {
 
     if (!formData.description.trim()) {
       validationErrors.description = 'Description is required';
+    }
+
+    if (formData.url && formData.url.trim()) {
+      try {
+        new URL(formData.url.trim());
+      } catch {
+        validationErrors.url = 'Please enter a valid URL';
+      }
     }
 
     if (!imageFile) {
@@ -83,6 +91,7 @@ function AddProjectPage() {
         userId: currentUser.uid,
         title: formData.title.trim(),
         description: formData.description.trim(),
+        url: formData.url.trim() || null,
         file: imageFile,
       });
 

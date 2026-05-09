@@ -67,7 +67,11 @@ function AuthProvider({ children }) {
       if (failedAttempts >= 4) {
         setCooldownUntil(Date.now() + 30000); // 30 seconds cooldown
       }
-      throw new Error(error.message || 'Login failed');
+      // Sanitize Firebase errors to user-friendly messages
+      if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential') {
+        throw new Error('Wrong credentials');
+      }
+      throw new Error('Login failed');
     }
   }, [failedAttempts, cooldownUntil]);
 
@@ -107,20 +111,33 @@ function AuthProvider({ children }) {
       return undefined;
     }
 
-    const unsubscribe = onAuthStateChanged(
-      auth,
-      (user) => {
-        setCurrentUser(user);
-        setLoading(false);
-      },
-      () => {
-        setCurrentUser(null);
-        setLoading(false);
-      }
-    );
+    let unsubscribe;
+    try {
+      unsubscribe = onAuthStateChanged(
+        auth,
+        (user) => {
+          setCurrentUser(user);
+          setAuthError('');
+          setLoading(false);
+        },
+        (error) => {
+          console.error('Auth state change error:', error);
+          setCurrentUser(null);
+          setAuthError('Authentication error occurred');
+          setLoading(false);
+        }
+      );
+    } catch (error) {
+      console.error('Failed to set up auth listener:', error);
+      setAuthError('Failed to initialize authentication');
+      setLoading(false);
+      return undefined;
+    }
 
     return () => {
-      unsubscribe();
+      if (unsubscribe) {
+        unsubscribe();
+      }
     };
   }, []);
 
