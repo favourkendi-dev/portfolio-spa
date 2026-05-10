@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "build:gh-pages": "VITE_DEPLOY_TARGET=github-pages vite build",
+    "build:gh-pages": "cross-env VITE_DEPLOY_TARGET=github-pages vite build",
     "preview": "vite preview",
     "deploy:gh-pages": "npm run build:gh-pages && gh-pages -d dist",
     "deploy:firebase": "firebase deploy",
@@ -36,6 +36,7 @@
     "@vitejs/plugin-react": "^4.0.0",
     "autoprefixer": "^10.4.14",
     "babel-jest": "^29.7.0",
+    "cross-env": "^10.1.0",
     "eslint": "^8.50.0",
     "eslint-plugin-react": "^7.33.0",
     "eslint-plugin-react-hooks": "^4.6.0",
