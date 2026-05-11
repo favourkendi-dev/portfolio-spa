@@ -76,6 +76,14 @@ function useProjects() {
     }
   }, []);
 
+  const addProject = useCallback((newProject) => {
+    setProjects((prev) => {
+      // Avoid duplicate if already added by onSnapshot
+      if (prev.some(p => p.id === newProject.id)) return prev;
+      return [...prev, newProject];
+    });
+  }, []);
+
   return {
     projects: mergedProjects,
     setProjects,
@@ -84,6 +92,7 @@ function useProjects() {
     refetch: fetchProjects,
     updateProject: updateProjectById,
     deleteProject: deleteProjectById,
+    addProject,
   };
 }
 

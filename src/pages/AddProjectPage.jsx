@@ -1,16 +1,19 @@
 ﻿import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
+import { Timestamp } from 'firebase/firestore';
 import Navbar from '../components/Navbar';
 import ProjectForm from '../components/ProjectForm';
 import FileUpload from '../components/FileUpload';
 import { useAuth } from '../context/AuthContext';
 import { createProjectWithImage } from '../services/projectService';
 import { uploadImageToCloudinary } from '../services/cloudinaryService';
+import useProjects from '../hooks/useProjects';
 
 function AddProjectPage() {
   const navigate = useNavigate();
   const { currentUser } = useAuth();
+  const { addProject } = useProjects();
 
   const [formData, setFormData] = useState({ title: '', description: '', url: '', imagePath: '' });
   const [imageFile, setImageFile] = useState(null);
@@ -80,13 +83,25 @@ function AddProjectPage() {
       const imageUrl = await uploadImageToCloudinary(imageFile);
 
       // Save project to Firestore with Cloudinary URL
-      await createProjectWithImage({
+      const projectId = await createProjectWithImage({
         userId: currentUser.uid,
         ownerEmail: currentUser.email,
         title: formData.title.trim(),
         description: formData.description.trim(),
         url: formData.url.trim() || null,
         imageUrl,
+      });
+
+      // Add to local state for immediate UI update
+      addProject({
+        id: projectId,
+        userId: currentUser.uid,
+        ownerEmail: currentUser.email,
+        title: formData.title.trim(),
+        description: formData.description.trim(),
+        url: formData.url.trim() || null,
+        imageUrl,
+        createdAt: Timestamp.now(),
       });
 
       toast.dismiss();
