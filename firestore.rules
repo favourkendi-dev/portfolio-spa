@@ -39,8 +39,8 @@ service cloud.firestore {
         data.ownerId is string &&
         data.ownerEmail is string &&
         (data.url == null || data.url is string) &&
-        data.createdAt is string &&
-        data.updatedAt is string
+        data.createdAt is timestamp &&
+        data.updatedAt is timestamp
       );
     }
 
@@ -69,7 +69,7 @@ service cloud.firestore {
         (newData.title is string && newData.title.size() > 0 && newData.title.size() <= 200) &&
         (newData.description is string && newData.description.size() > 0 && newData.description.size() <= 2000) &&
         (newData.image is string && newData.image.size() > 0) &&
-        newData.updatedAt is string
+        newData.updatedAt is timestamp
       );
     }
 

@@ -17,6 +17,7 @@ const AddProjectPage = lazy(() => import('./pages/AddProjectPage'));
 const BookmarksPage = lazy(() => import('./pages/BookmarksPage'));
 const ProjectPage = lazy(() => import('./pages/ProjectPage'));
 const ProjectDetailsPage = lazy(() => import('./pages/ProjectDetailsPage'));
+const EditProjectPage = lazy(() => import('./pages/EditProjectPage'));
 
 const basename =
   import.meta.env.BASE_URL && import.meta.env.BASE_URL !== '/'
@@ -96,6 +97,10 @@ path: 'projects/:id',
 element: <ProjectDetailsPage />,
 },
 {
+path: 'projects/:id/edit',
+element: <EditProjectPage />,
+},
+{
 element: <ProtectedRoute />,
 children: [
 {
@@ -103,7 +108,7 @@ path: 'projects/add',
 element: <AddProjectPage />,
 },
 {
-path: 'my-projects',
+path: 'added-projects',
 element: <ProjectPage />,
 },
 {

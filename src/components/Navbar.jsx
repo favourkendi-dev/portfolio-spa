@@ -40,7 +40,7 @@ function Navbar() {
 
   const authenticatedLinks = [
     { path: '/', label: 'Home', icon: null },
-    { path: '/my-projects', label: 'My Projects', icon: FiFolder },
+    { path: '/added-projects', label: 'Added Projects', icon: FiFolder },
     { path: '/projects/add', label: 'Add Project', icon: FiPlus },
     { path: '/bookmarks', label: 'Bookmarks', icon: FiBookmark },
   ];

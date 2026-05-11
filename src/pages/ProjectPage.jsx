@@ -59,7 +59,7 @@ function ProjectsPage() {
       <Navbar />
 
       <main className="mx-auto max-w-7xl px-4 py-8">
-        <h1 className="mb-8 text-2xl font-semibold">My Projects</h1>
+        <h1 className="mb-8 text-2xl font-semibold">Added Projects</h1>
 
         {loading && (
           <section

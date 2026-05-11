@@ -9,7 +9,7 @@
     "build:gh-pages": "vite build --base /portfolio-spa/",
     "preview": "vite preview",
     "deploy:gh-pages": "npm run build:gh-pages && gh-pages -d dist",
-    "deploy:firebase": "firebase deploy",
+    "deploy:firebase": "npm run build && firebase deploy",
     "lint": "eslint \"src/**/*.{js,jsx}\"",
     "test": "cross-env NODE_OPTIONS=--no-warnings jest --runInBand",
     "test:watch": "cross-env NODE_OPTIONS=--no-warnings jest --watchAll",

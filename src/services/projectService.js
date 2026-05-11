@@ -1,4 +1,4 @@
-import { collection, addDoc, getDocs, doc, getDoc, updateDoc, deleteDoc } from 'firebase/firestore';
+import { collection, addDoc, getDocs, doc, getDoc, updateDoc, deleteDoc, Timestamp } from 'firebase/firestore';
 import { db } from './firebase';
 
 const FIRESTORE_ERROR_MESSAGES = {
@@ -92,8 +92,9 @@ export async function getProjectById(id) {
 export async function updateProject(id, payload) {
   try {
     const docRef = doc(db, 'projects', id);
-    await updateDoc(docRef, payload);
-    return { id, ...payload };
+    const updatePayload = { ...payload, updatedAt: Timestamp.now() };
+    await updateDoc(docRef, updatePayload);
+    return { id, ...updatePayload };
   } catch (error) {
     throw wrapFirestoreError(error, 'Failed to update project.');
   }
@@ -156,7 +157,7 @@ export async function createProjectWithImage({ userId, ownerEmail, title, descri
     }
   }
 
-  const timestamp = new Date().toISOString();
+  const timestamp = Timestamp.now();
   const payload = {
     title: title.trim(),
     description: description.trim(),

@@ -1,6 +1,6 @@
 ﻿import PropTypes from 'prop-types';
 import { Link } from 'react-router-dom';
-import { FiBookmark } from 'react-icons/fi';
+import { FiBookmark, FiEdit } from 'react-icons/fi';
 import { FaBookmark } from 'react-icons/fa';
 
 function ProjectCard({
@@ -102,14 +102,24 @@ function ProjectCard({
         </button>
 
         {isOwner && (
-          <button
-            type="button"
-            onClick={handleDelete}
-            aria-label={`Delete ${title}`}
-            className="absolute right-4 bottom-4 z-20 inline-flex rounded-full bg-red-600 px-3 py-2 text-xs font-semibold text-white transition duration-200 hover:bg-red-700"
-          >
-            Delete
-          </button>
+          <div className="absolute right-4 bottom-4 z-20 flex gap-2">
+            <Link
+              to={`/projects/${id}/edit`}
+              onClick={(e) => e.stopPropagation()}
+              aria-label={`Edit ${title}`}
+              className="inline-flex rounded-full bg-indigo-600 px-3 py-2 text-xs font-semibold text-white transition duration-200 hover:bg-indigo-700"
+            >
+              <FiEdit className="h-4 w-4" />
+            </Link>
+            <button
+              type="button"
+              onClick={handleDelete}
+              aria-label={`Delete ${title}`}
+              className="inline-flex rounded-full bg-red-600 px-3 py-2 text-xs font-semibold text-white transition duration-200 hover:bg-red-700"
+            >
+              Delete
+            </button>
+          </div>
         )}
       </div>
 
