@@ -7,7 +7,7 @@
     "dev": "vite",
     "build": "npm run build:firebase",
     "build:firebase": "cross-env VITE_DEPLOY_TARGET=firebase vite build",
-    "build:gh-pages": "cross-env VITE_DEPLOY_TARGET=github-pages vite build",
+    "build:gh-pages": "cross-env GITHUB_PAGES=true vite build",
     "preview": "vite preview",
     "deploy:gh-pages": "npm run build:gh-pages && gh-pages -d dist",
     "deploy:firebase": "npm run build:firebase && firebase deploy",
