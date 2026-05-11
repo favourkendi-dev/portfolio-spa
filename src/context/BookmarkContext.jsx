@@ -1,75 +1,133 @@
 ﻿import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import PropTypes from 'prop-types';
+import { useAuth } from './AuthContext';
+import {
+  addBookmark as addBookmarkDocument,
+  removeBookmark as removeBookmarkDocument,
+  subscribeToBookmarks,
+} from '../services/bookmarkService';
 
 const BookmarkContext = createContext(null);
-const STORAGE_KEY = 'portfolio_bookmarks';
 
 function BookmarkProvider({ children }) {
-  const [bookmarkedIds, setBookmarkedIds] = useState([]);
+  const { currentUser, loading: authLoading } = useAuth();
+  const [bookmarkDocIdsByProjectId, setBookmarkDocIdsByProjectId] = useState({});
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    let isMounted = true;
+    if (authLoading) {
+      return undefined;
+    }
 
-    const loadBookmarks = () => {
-      try {
-        const stored = localStorage.getItem(STORAGE_KEY);
+    if (!currentUser) {
+      setBookmarkDocIdsByProjectId({});
+      setLoading(false);
+      return undefined;
+    }
 
-        if (!isMounted) return;
+    setLoading(true);
 
-        if (stored) {
-          const parsed = JSON.parse(stored);
-          setBookmarkedIds(Array.isArray(parsed) ? parsed : []);
-        } else {
-          setBookmarkedIds([]);
-        }
-      } catch {
-        setBookmarkedIds([]);
-      } finally {
-        if (isMounted) setLoading(false);
+    const unsubscribe = subscribeToBookmarks(
+      currentUser.uid,
+      (snapshot) => {
+        const documentMap = {};
+
+        snapshot.docs.forEach((doc) => {
+          const projectId = doc.data()?.projectId;
+          if (projectId) {
+            documentMap[projectId] = doc.id;
+          }
+        });
+
+        setBookmarkDocIdsByProjectId(documentMap);
+        setLoading(false);
+      },
+      (error) => {
+        console.error('Bookmark snapshot error:', error);
+        setBookmarkDocIdsByProjectId({});
+        setLoading(false);
       }
-    };
-
-    loadBookmarks();
+    );
 
     return () => {
-      isMounted = false;
+      unsubscribe();
     };
-  }, []);
+  }, [authLoading, currentUser]);
 
-  useEffect(() => {
-    if (!loading) {
-      try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(bookmarkedIds));
-      } catch {
-        // Ignore storage errors in production.
+  const addBookmark = useCallback(
+    async (projectId) => {
+      if (!currentUser) {
+        return;
       }
-    }
-  }, [bookmarkedIds, loading]);
 
-  const addBookmark = useCallback((projectId) => {
-    setBookmarkedIds((prev) => (prev.includes(projectId) ? prev : [...prev, projectId]));
-  }, []);
+      if (bookmarkDocIdsByProjectId[projectId]) {
+        return;
+      }
 
-  const removeBookmark = useCallback((projectId) => {
-    setBookmarkedIds((prev) => prev.filter((id) => id !== projectId));
-  }, []);
+      try {
+        const documentId = await addBookmarkDocument(currentUser.uid, projectId);
+        setBookmarkDocIdsByProjectId((prev) => ({
+          ...prev,
+          [projectId]: documentId,
+        }));
+      } catch (error) {
+        console.error('Failed to add bookmark:', error);
+      }
+    },
+    [currentUser, bookmarkDocIdsByProjectId]
+  );
 
-  const toggleBookmark = useCallback((projectId) => {
-    setBookmarkedIds((prev) =>
-      prev.includes(projectId)
-        ? prev.filter((id) => id !== projectId)
-        : [...prev, projectId]
-    );
-  }, []);
+  const removeBookmark = useCallback(
+    async (projectId) => {
+      const documentId = bookmarkDocIdsByProjectId[projectId];
+      if (!currentUser || !documentId) {
+        return;
+      }
+
+      try {
+        await removeBookmarkDocument(documentId);
+        setBookmarkDocIdsByProjectId((prev) => {
+          const next = { ...prev };
+          delete next[projectId];
+          return next;
+        });
+      } catch (error) {
+        console.error('Failed to remove bookmark:', error);
+      }
+    },
+    [currentUser, bookmarkDocIdsByProjectId]
+  );
+
+  const toggleBookmark = useCallback(
+    (projectId) => {
+      if (bookmarkDocIdsByProjectId[projectId]) {
+        removeBookmark(projectId);
+      } else {
+        addBookmark(projectId);
+      }
+    },
+    [bookmarkDocIdsByProjectId, addBookmark, removeBookmark]
+  );
 
   const isBookmarked = useCallback(
-    (projectId) => bookmarkedIds.includes(projectId),
-    [bookmarkedIds]
+    (projectId) => Boolean(bookmarkDocIdsByProjectId[projectId]),
+    [bookmarkDocIdsByProjectId]
+  );
+
+  const bookmarkedIds = useMemo(
+    () => Object.keys(bookmarkDocIdsByProjectId),
+    [bookmarkDocIdsByProjectId]
   );
 
   const value = useMemo(
-    () => ({ bookmarkedIds, loading, addBookmark, removeBookmark, toggleBookmark, isBookmarked }),
+    () => ({
+      bookmarkedIds,
+      loading,
+      addBookmark,
+      removeBookmark,
+      toggleBookmark,
+      isBookmarked,
+    }),
     [bookmarkedIds, loading, addBookmark, removeBookmark, toggleBookmark, isBookmarked]
   );
 

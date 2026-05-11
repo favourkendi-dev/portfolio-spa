@@ -1,11 +1,16 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 
+const deployTarget = process.env.VITE_DEPLOY_TARGET || process.env.DEPLOY_TARGET || '';
 const isGitHubPages =
-  process.env.VITE_DEPLOY_TARGET === 'github-pages' ||
+  deployTarget === 'github-pages' ||
   process.env.GITHUB_ACTIONS === 'true'
 
 const getBasePath = () => {
+  if (process.env.VITE_BASE_URL) {
+    return process.env.VITE_BASE_URL;
+  }
+
   if (isGitHubPages) {
     return '/portfolio-spa/'
   }
