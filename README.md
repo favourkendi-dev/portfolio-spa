@@ -146,8 +146,12 @@ The app will be available at *http://localhost:5173* (Vite) or *http://localhost
 | Script | Description |
 |---|---|
 | npm run dev | Start the development server |
-| npm run build | Build the app for production |
+| npm run build | Build the app for production (Firebase build target) |
+| npm run build:firebase | Build the app for Firebase Hosting |
+| npm run build:gh-pages | Build the app for GitHub Pages with /portfolio-spa/ base path |
 | npm run preview | Preview the production build locally |
+| npm run deploy:firebase | Build and deploy to Firebase Hosting |
+| npm run deploy:gh-pages | Build and deploy to GitHub Pages |
 | npm test | Run all tests |
 | npm run test -- --coverage | Run tests with coverage report |
 

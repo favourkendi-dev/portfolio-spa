@@ -1,7 +1,8 @@
-﻿import { useCallback, useEffect, useState } from 'react';
+﻿import { useCallback, useEffect, useMemo, useState } from 'react';
 import { collection, query, orderBy, onSnapshot } from 'firebase/firestore';
 import { db } from '../services/firebase';
 import { getAllProjects, updateProject, deleteProject } from '../services/projectService';
+import showcaseProjects from '../data/showcaseProjects';
 
 function useProjects() {
   const [projects, setProjects] = useState([]);
@@ -45,6 +46,14 @@ function useProjects() {
     return () => unsubscribe();
   }, []);
 
+  const mergedProjects = useMemo(() => {
+    const projectIds = new Set(projects.map((project) => project.id));
+    return [
+      ...showcaseProjects,
+      ...projects.filter((project) => !projectIds.has(project.id)),
+    ];
+  }, [projects]);
+
   const updateProjectById = useCallback(async (id, payload) => {
     try {
       await updateProject(id, payload);
@@ -68,7 +77,7 @@ function useProjects() {
   }, []);
 
   return {
-    projects,
+    projects: mergedProjects,
     setProjects,
     loading,
     error,
