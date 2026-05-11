@@ -19,10 +19,8 @@ const ProjectPage = lazy(() => import('./pages/ProjectPage'));
 const ProjectDetailsPage = lazy(() => import('./pages/ProjectDetailsPage'));
 const EditProjectPage = lazy(() => import('./pages/EditProjectPage'));
 
-const basename =
-  import.meta.env.BASE_URL && import.meta.env.BASE_URL !== '/'
-    ? import.meta.env.BASE_URL.replace(/\/$/, '')
-    : '';
+const baseUrl = import.meta.env.BASE_URL || '/';
+const basename = baseUrl !== '/' ? baseUrl.replace(/\/$/, '') : '/';
 
 function LoadingFallback() {
 return (

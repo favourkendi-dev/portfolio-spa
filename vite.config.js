@@ -4,6 +4,8 @@ import react from '@vitejs/plugin-react'
 const deployTarget = process.env.VITE_DEPLOY_TARGET || process.env.DEPLOY_TARGET || '';
 const isGitHubPages =
   deployTarget === 'github-pages' ||
+  process.env.DEPLOY_TARGET === 'github-pages' ||
+  process.env.GITHUB_PAGES === 'true' ||
   process.env.GITHUB_ACTIONS === 'true'
 
 const getBasePath = () => {
