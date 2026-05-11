@@ -63,16 +63,22 @@ function ProjectDetailsPage() {
   }
 
   if (error) {
+    const isPermissionIssue = /permission|unauthorized|unauthenticated|session expired/i.test(error);
+    const errorHeading = isPermissionIssue ? 'Unable to load project' : 'Project Not Found';
+    const errorMessage = isPermissionIssue
+      ? 'You do not have permission to view this project. Please sign in again or contact support if the issue persists.'
+      : error;
+
     return (
       <div className="min-h-screen bg-slate-50 dark:bg-slate-900">
         <Navbar />
         <main className="flex min-h-[calc(100vh-64px)] items-center justify-center px-4 py-12">
           <div className="w-full max-w-xl rounded-3xl border border-red-200 bg-white p-8 shadow-lg dark:border-red-800 dark:bg-slate-800">
             <h1 className="text-3xl font-semibold text-red-700 dark:text-red-400">
-              Project Not Found
+              {errorHeading}
             </h1>
             <p className="mt-4 text-sm text-slate-600 dark:text-slate-300">
-              {error}
+              {errorMessage}
             </p>
             <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center">
               <button
@@ -116,15 +122,20 @@ function ProjectDetailsPage() {
     );
   }
 
-  const formattedDate = new Date(project.createdAt).toLocaleDateString(
-    'en-US',
-    {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-    }
-  );
+  const rawCreatedAt = project.createdAt;
+  const createdAtDate = rawCreatedAt && typeof rawCreatedAt === 'object' && typeof rawCreatedAt.toDate === 'function'
+    ? rawCreatedAt.toDate()
+    : new Date(rawCreatedAt);
 
+  const formattedDate = Number.isFinite(createdAtDate?.getTime())
+    ? createdAtDate.toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+      })
+    : 'Unknown date';
+
+  const imageSrc = project.imageUrl || project.image || '/favicon.svg';
   const isOwner = currentUser?.uid === project.userId;
   const bookmarked = isBookmarked(project.id);
 
@@ -187,7 +198,7 @@ function ProjectDetailsPage() {
         <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-lg dark:border-slate-700 dark:bg-slate-800">
           <div className="aspect-video w-full overflow-hidden bg-slate-100 dark:bg-slate-700">
             <img
-              src={project.imageUrl}
+              src={imageSrc}
               alt={project.title}
               className="h-full w-full object-cover"
             />

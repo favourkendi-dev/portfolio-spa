@@ -1,6 +1,34 @@
 import { collection, addDoc, getDocs, doc, getDoc, updateDoc, deleteDoc } from 'firebase/firestore';
 import { db } from './firebase';
 
+const FIRESTORE_ERROR_MESSAGES = {
+  'permission-denied': 'Unable to access project data. Please refresh and try again or sign in with the authorized account.',
+  'unauthenticated': 'Your session has expired. Please sign in again.',
+};
+
+function getFriendlyFirestoreError(error, fallback) {
+  const message = error?.message?.toString() || '';
+  const code = error?.code?.toString()?.toLowerCase?.() || '';
+
+  if (code && FIRESTORE_ERROR_MESSAGES[code]) {
+    return FIRESTORE_ERROR_MESSAGES[code];
+  }
+
+  if (/missing or insufficient permissions/i.test(message)) {
+    return FIRESTORE_ERROR_MESSAGES['permission-denied'];
+  }
+
+  if (/auth\/unauthenticated|unauthenticated/i.test(message)) {
+    return FIRESTORE_ERROR_MESSAGES['unauthenticated'];
+  }
+
+  return message || fallback;
+}
+
+function wrapFirestoreError(error, fallback) {
+  return new Error(getFriendlyFirestoreError(error, fallback));
+}
+
 export async function createProjectRecord(projectPayload) {
   try {
     // Verify payload has required fields
@@ -10,17 +38,7 @@ export async function createProjectRecord(projectPayload) {
     const docRef = await addDoc(collection(db, 'projects'), projectPayload);
     return { id: docRef.id, ...projectPayload };
   } catch (error) {
-    // User-safe error messages for Firestore
-    if (error.code === 'permission-denied') {
-      throw new Error('Unable to save project. Please check that you are signed in and try again.');
-    }
-    if (error.code === 'unauthenticated') {
-      throw new Error('Your session has expired. Please sign in again to create projects.');
-    }
-    if (error.code === 'not-found') {
-      throw new Error('Service temporarily unavailable. Please try again.');
-    }
-    throw new Error(error.message || 'Unable to save project. Please try again.');
+    throw wrapFirestoreError(error, 'Unable to save project. Please try again.');
   }
 }
 
@@ -33,21 +51,27 @@ export async function getAllProjects() {
     });
     return projects;
   } catch (error) {
-    throw new Error(error.message || 'Failed to fetch projects.');
+    throw wrapFirestoreError(error, 'Failed to fetch projects.');
   }
 }
 
 export async function getProjectById(id) {
+  if (!id || typeof id !== 'string') {
+    throw new Error('Invalid project identifier.');
+  }
+
   try {
     const docRef = doc(db, 'projects', id);
     const docSnap = await getDoc(docRef);
     if (docSnap.exists()) {
       return { id: docSnap.id, ...docSnap.data() };
-    } else {
-      throw new Error('Project not found.');
     }
+    throw new Error('Project not found.');
   } catch (error) {
-    throw new Error(error.message || 'Failed to fetch project.');
+    if (error.message === 'Project not found.') {
+      throw error;
+    }
+    throw wrapFirestoreError(error, 'Failed to fetch project.');
   }
 }
 
@@ -57,7 +81,7 @@ export async function updateProject(id, payload) {
     await updateDoc(docRef, payload);
     return { id, ...payload };
   } catch (error) {
-    throw new Error(error.message || 'Failed to update project.');
+    throw wrapFirestoreError(error, 'Failed to update project.');
   }
 }
 
@@ -66,7 +90,7 @@ export async function deleteProject(id) {
     const docRef = doc(db, 'projects', id);
     await deleteDoc(docRef);
   } catch (error) {
-    throw new Error(error.message || 'Failed to delete project.');
+    throw wrapFirestoreError(error, 'Failed to delete project.');
   }
 }
 

@@ -1,5 +1,4 @@
 import { Component } from 'react';
-import PropTypes from 'prop-types';
 import { toast } from 'react-hot-toast';
 
 class ErrorBoundary extends Component {
@@ -12,16 +11,17 @@ class ErrorBoundary extends Component {
     };
   }
 
-  static getDerivedStateFromError() {
+  static getDerivedStateFromError(error) {
     return { hasError: true };
   }
 
-  componentDidCatch(_error, _errorInfo) {
+  componentDidCatch(error, errorInfo) {
     this.setState({
-      error: _error,
-      errorInfo: _errorInfo,
+      error,
+      errorInfo,
     });
 
+    console.error('ErrorBoundary caught an error:', error, errorInfo);
     toast.error('Something went wrong. Please refresh the page.');
   }
 
@@ -40,7 +40,7 @@ class ErrorBoundary extends Component {
           <div className="max-w-md text-center">
             <h1 className="text-3xl font-bold text-red-600">Oops!</h1>
             <p className="mt-4 text-gray-700">
-              Something went wrong. We&apos;re sorry for the inconvenience.
+              Something went wrong. We're sorry for the inconvenience.
             </p>
 
             {process.env.NODE_ENV === 'development' && this.state.error && (
@@ -79,9 +79,4 @@ class ErrorBoundary extends Component {
   }
 }
 
-ErrorBoundary.propTypes = {
-  children: PropTypes.node.isRequired,
-};
-
 export default ErrorBoundary;
-

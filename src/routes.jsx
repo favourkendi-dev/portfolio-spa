@@ -17,6 +17,11 @@ const AddProjectPage = lazy(() => import('./pages/AddProjectPage'));
 const BookmarksPage = lazy(() => import('./pages/BookmarksPage'));
 const ProjectDetailsPage = lazy(() => import('./pages/ProjectDetailsPage'));
 
+const basename =
+  import.meta.env.BASE_URL && import.meta.env.BASE_URL !== '/'
+    ? import.meta.env.BASE_URL.replace(/\/$/, '')
+    : '';
+
 function LoadingFallback() {
 return (
 <main role="status" aria-live="polite" className="flex min-h-screen items-center justify-center bg-slate-50 px-4" >
@@ -104,6 +109,13 @@ element: <BookmarksPage />,
 },
 ],
 },
-]);
+],
+{
+  basename,
+  future: {
+    v7_startTransition: true,
+    v7_relativeSplatPath: true,
+  },
+});
 
 export default router;

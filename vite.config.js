@@ -1,13 +1,14 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 
-// Determine base path for deployment
+const isGitHubPages =
+  process.env.VITE_DEPLOY_TARGET === 'github-pages' ||
+  process.env.GITHUB_ACTIONS === 'true'
+
 const getBasePath = () => {
-  // For GitHub Pages deployment, set VITE_DEPLOY_TARGET=github-pages
-  if (process.env.VITE_DEPLOY_TARGET === 'github-pages') {
-    return '/spa-portfolio/'
+  if (isGitHubPages) {
+    return '/portfolio-spa/'
   }
-  // Default: Firebase Hosting and dev server use root
   return '/'
 }
 
