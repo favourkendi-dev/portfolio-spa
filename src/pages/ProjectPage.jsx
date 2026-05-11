@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { collection, getDocs, orderBy, query, where } from 'firebase/firestore';
+import { collection, orderBy, query, where, onSnapshot } from 'firebase/firestore';
 import Navbar from '../components/Navbar';
 import ProjectCard from '../components/ProjectCard';
 import { useAuth } from '../context/AuthContext';
@@ -15,50 +15,37 @@ function ProjectsPage() {
   const [error, setError] = useState('');
 
   useEffect(() => {
-    let isMounted = true;
+    if (!currentUser) {
+      setLoading(false);
+      return;
+    }
 
-    const fetchProjects = async () => {
-      if (!currentUser) {
-        setLoading(false);
-        return;
-      }
+    setLoading(true);
+    setError('');
 
-      try {
-        setLoading(true);
-        setError('');
+    const projectsQuery = query(
+      collection(db, 'projects'),
+      where('userId', '==', currentUser.uid),
+      orderBy('createdAt', 'desc')
+    );
 
-        const projectsQuery = query(
-          collection(db, 'projects'),
-          where('userId', '==', currentUser.uid),
-          orderBy('createdAt', 'desc')
-        );
-
-        const snapshot = await getDocs(projectsQuery);
-
+    const unsubscribe = onSnapshot(
+      projectsQuery,
+      (snapshot) => {
         const fetchedProjects = snapshot.docs.map((document) => ({
           id: document.id,
           ...document.data(),
         }));
-
-        if (isMounted) {
-          setProjects(fetchedProjects);
-        }
-      } catch (fetchError) {
-        if (isMounted) {
-          setError(fetchError.message || 'Failed to load projects');
-        }
-      } finally {
-        if (isMounted) {
-          setLoading(false);
-        }
+        setProjects(fetchedProjects);
+        setLoading(false);
+      },
+      (error) => {
+        setError(error.message || 'Failed to load projects');
+        setLoading(false);
       }
-    };
+    );
 
-    fetchProjects();
-
-    return () => {
-      isMounted = false;
-    };
+    return () => unsubscribe();
   }, [currentUser]);
 
   const handleDelete = (projectId) => {

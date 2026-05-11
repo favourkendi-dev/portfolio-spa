@@ -10,12 +10,23 @@ service cloud.firestore {
       return isAuthenticated() && request.auth.uid == userId;
     }
 
-    function isProjectOwner(projectUserId) {
-      return isAuthenticated() && request.auth.uid == projectUserId;
+    function isProjectOwner(projectUserId, projectOwnerId) {
+      return isAuthenticated() && (
+        request.auth.uid == projectUserId || request.auth.uid == projectOwnerId
+      );
     }
 
     function hasProjectRequiredFields() {
-      return request.resource.data.keys().hasAll(['title', 'description', 'image', 'userId', 'createdAt']);
+      return request.resource.data.keys().hasAll([
+        'title',
+        'description',
+        'image',
+        'userId',
+        'ownerId',
+        'ownerEmail',
+        'createdAt',
+        'updatedAt',
+      ]);
     }
 
     function projectFieldTypesValid() {
@@ -25,8 +36,11 @@ service cloud.firestore {
         data.description is string &&
         data.image is string &&
         data.userId is string &&
+        data.ownerId is string &&
+        data.ownerEmail is string &&
         (data.url == null || data.url is string) &&
-        data.createdAt is string
+        data.createdAt is string &&
+        data.updatedAt is string
       );
     }
 
@@ -36,7 +50,9 @@ service cloud.firestore {
         data.title.size() > 0 && data.title.size() <= 200 &&
         data.description.size() > 0 && data.description.size() <= 2000 &&
         data.image.size() > 0 &&
-        data.userId.size() > 0
+        data.userId.size() > 0 &&
+        data.ownerId.size() > 0 &&
+        data.ownerEmail.size() > 0
       );
     }
 
@@ -44,13 +60,16 @@ service cloud.firestore {
       let newData = request.resource.data;
       let oldData = resource.data;
       return (
-        // Ensure userId and createdAt cannot be changed
+        // Ensure ownership metadata and creation date cannot be changed
         newData.userId == oldData.userId &&
+        newData.ownerId == oldData.ownerId &&
+        newData.ownerEmail == oldData.ownerEmail &&
         newData.createdAt == oldData.createdAt &&
         // Validate other fields
         (newData.title is string && newData.title.size() > 0 && newData.title.size() <= 200) &&
         (newData.description is string && newData.description.size() > 0 && newData.description.size() <= 2000) &&
-        (newData.image is string && newData.image.size() > 0)
+        (newData.image is string && newData.image.size() > 0) &&
+        newData.updatedAt is string
       );
     }
 
@@ -70,18 +89,19 @@ service cloud.firestore {
         hasProjectRequiredFields() &&
         projectFieldTypesValid() &&
         projectFieldLengthsValid() &&
-        isUserOrOwner(request.resource.data.userId);
+        isUserOrOwner(request.resource.data.userId) &&
+        request.resource.data.userId == request.resource.data.ownerId;
 
       // Allow project owners to update their projects
       allow update: if
         isAuthenticated() &&
-        isProjectOwner(resource.data.userId) &&
+        isProjectOwner(resource.data.userId, resource.data.ownerId) &&
         isValidProjectUpdate();
 
       // Allow project owners to delete their projects
       allow delete: if
         isAuthenticated() &&
-        isProjectOwner(resource.data.userId);
+        isProjectOwner(resource.data.userId, resource.data.ownerId);
     }
 
     // Bookmarks collection - user-specific

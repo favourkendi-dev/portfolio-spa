@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link, NavLink, useNavigate, useLocation } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
-import { FiMenu, FiX, FiLogOut, FiPlus, FiBookmark, FiMoon, FiSun } from 'react-icons/fi';
+import { FiMenu, FiX, FiLogOut, FiPlus, FiBookmark, FiFolder, FiMoon, FiSun } from 'react-icons/fi';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 
@@ -40,6 +40,7 @@ function Navbar() {
 
   const authenticatedLinks = [
     { path: '/', label: 'Home', icon: null },
+    { path: '/my-projects', label: 'My Projects', icon: FiFolder },
     { path: '/projects/add', label: 'Add Project', icon: FiPlus },
     { path: '/bookmarks', label: 'Bookmarks', icon: FiBookmark },
   ];

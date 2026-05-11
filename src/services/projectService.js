@@ -32,9 +32,23 @@ function wrapFirestoreError(error, fallback) {
 export async function createProjectRecord(projectPayload) {
   try {
     // Verify payload has required fields
-    if (!projectPayload.title || !projectPayload.description || !projectPayload.image || !projectPayload.userId) {
+    if (
+      !projectPayload.title ||
+      !projectPayload.description ||
+      !projectPayload.image ||
+      !projectPayload.userId ||
+      !projectPayload.ownerId ||
+      !projectPayload.ownerEmail ||
+      !projectPayload.createdAt ||
+      !projectPayload.updatedAt
+    ) {
       throw new Error('Invalid project data. Please ensure all required fields are filled.');
     }
+
+    if (projectPayload.userId !== projectPayload.ownerId) {
+      throw new Error('Project ownership metadata must match the authenticated user.');
+    }
+
     const docRef = await addDoc(collection(db, 'projects'), projectPayload);
     return { id: docRef.id, ...projectPayload };
   } catch (error) {
@@ -94,10 +108,14 @@ export async function deleteProject(id) {
   }
 }
 
-export async function createProjectWithImage({ userId, title, description, url, imageUrl }) {
+export async function createProjectWithImage({ userId, ownerEmail, title, description, url, imageUrl }) {
   // Validate authentication
   if (!userId) {
     throw new Error('Your session has expired. Please sign in to create a project.');
+  }
+
+  if (!ownerEmail || !ownerEmail.trim()) {
+    throw new Error('Unable to create project without a valid account email.');
   }
 
   // Validate title
@@ -138,12 +156,16 @@ export async function createProjectWithImage({ userId, title, description, url, 
     }
   }
 
+  const timestamp = new Date().toISOString();
   const payload = {
     title: title.trim(),
     description: description.trim(),
     image: imageUrl.trim(),
     userId,
-    createdAt: new Date().toISOString(),
+    ownerId: userId,
+    ownerEmail: ownerEmail.trim(),
+    createdAt: timestamp,
+    updatedAt: timestamp,
   };
 
   if (url && url.trim()) {

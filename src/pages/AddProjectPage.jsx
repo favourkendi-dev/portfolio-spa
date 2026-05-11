@@ -12,7 +12,7 @@ function AddProjectPage() {
   const navigate = useNavigate();
   const { currentUser } = useAuth();
 
-  const [formData, setFormData] = useState({ title: '', description: '', url: '' });
+  const [formData, setFormData] = useState({ title: '', description: '', url: '', imagePath: '' });
   const [imageFile, setImageFile] = useState(null);
   const [errors, setErrors] = useState({});
   const [submitting, setSubmitting] = useState(false);
@@ -82,6 +82,7 @@ function AddProjectPage() {
       // Save project to Firestore with Cloudinary URL
       await createProjectWithImage({
         userId: currentUser.uid,
+        ownerEmail: currentUser.email,
         title: formData.title.trim(),
         description: formData.description.trim(),
         url: formData.url.trim() || null,

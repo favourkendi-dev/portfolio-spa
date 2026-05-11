@@ -1,4 +1,6 @@
 ﻿import { useCallback, useEffect, useMemo, useState } from 'react';
+import { collection, query, orderBy, onSnapshot } from 'firebase/firestore';
+import { db } from '../services/firebase';
 import { getAllProjects, updateProject, deleteProject } from '../services/projectService';
 import showcaseProjects from '../data/showcaseProjects';
 
@@ -23,8 +25,26 @@ function useProjects() {
   }, []);
 
   useEffect(() => {
-    fetchProjects();
-  }, [fetchProjects]);
+    setLoading(true);
+    setError('');
+
+    const projectsQuery = query(collection(db, 'projects'), orderBy('createdAt', 'desc'));
+    const unsubscribe = onSnapshot(
+      projectsQuery,
+      (snapshot) => {
+        const fetchedProjects = [];
+        snapshot.forEach((doc) => fetchedProjects.push({ id: doc.id, ...doc.data() }));
+        setProjects(fetchedProjects);
+        setLoading(false);
+      },
+      (snapshotError) => {
+        setError(snapshotError.message || 'Failed to load projects.');
+        setLoading(false);
+      }
+    );
+
+    return () => unsubscribe();
+  }, []);
 
   const mergedProjects = useMemo(() => {
     const projectIds = new Set(projects.map((project) => project.id));

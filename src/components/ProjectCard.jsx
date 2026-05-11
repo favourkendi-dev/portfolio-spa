@@ -18,6 +18,7 @@ function ProjectCard({
     imageUrl,
     createdAt,
     userId,
+    ownerEmail,
     category,
   } = project;
 
@@ -35,7 +36,7 @@ function ProjectCard({
 
   const projectUrl = project.url || project.liveUrl || project.externalUrl || project.projectUrl;
   const badge = category || 'Showcase';
-  const creator = userId || 'Portfolio Showcase';
+  const creator = ownerEmail || userId || 'Portfolio Showcase';
   const ariaLabel = projectUrl ? `Open ${title}` : `View details for ${title}`;
 
   const handleBookmark = (e) => {
@@ -158,6 +159,7 @@ ProjectCard.propTypes = {
       PropTypes.object,
     ]).isRequired,
     userId: PropTypes.string,
+    ownerEmail: PropTypes.string,
     category: PropTypes.string,
     url: PropTypes.string,
     liveUrl: PropTypes.string,

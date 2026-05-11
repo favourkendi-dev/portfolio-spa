@@ -62,7 +62,7 @@ function BookmarksPage() {
           loading={loading}
           onBookmark={toggleBookmark}
           onDelete={handleDelete}
-          currentUserId={currentUser?.uid}
+          currentUser={currentUser}
           bookmarkedIds={bookmarkedIds}
         />
       </main>

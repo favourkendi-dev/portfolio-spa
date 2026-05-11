@@ -11,7 +11,7 @@ function ProjectList({ projects, onBookmark, onDelete, bookmarkedIds, currentUse
           onBookmark={onBookmark}
           onDelete={onDelete}
           isBookmarked={bookmarkedIds?.includes(project.id)}
-          isOwner={currentUser?.uid === project.userId}
+          isOwner={currentUser?.uid === (project.ownerId || project.userId)}
         />
       ))}
     </section>

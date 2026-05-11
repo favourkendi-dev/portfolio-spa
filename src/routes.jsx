@@ -15,6 +15,7 @@ const LoginPage = lazy(() => import('./pages/LoginPage'));
 const RegisterPage = lazy(() => import('./pages/RegisterPage'));
 const AddProjectPage = lazy(() => import('./pages/AddProjectPage'));
 const BookmarksPage = lazy(() => import('./pages/BookmarksPage'));
+const ProjectPage = lazy(() => import('./pages/ProjectPage'));
 const ProjectDetailsPage = lazy(() => import('./pages/ProjectDetailsPage'));
 
 const basename =
@@ -100,6 +101,10 @@ children: [
 {
 path: 'projects/add',
 element: <AddProjectPage />,
+},
+{
+path: 'my-projects',
+element: <ProjectPage />,
 },
 {
 path: 'bookmarks',

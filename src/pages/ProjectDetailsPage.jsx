@@ -136,7 +136,7 @@ function ProjectDetailsPage() {
     : 'Unknown date';
 
   const imageSrc = project.imageUrl || project.image || '/favicon.svg';
-  const isOwner = currentUser?.uid === project.userId;
+  const isOwner = currentUser?.uid === (project.ownerId || project.userId);
   const bookmarked = isBookmarked(project.id);
 
   return (
