@@ -47,10 +47,10 @@ function useProjects() {
   }, []);
 
   const mergedProjects = useMemo(() => {
-    const projectIds = new Set(projects.map((project) => project.id));
+    const showcaseProjectIds = new Set(showcaseProjects.map((project) => project.id));
     return [
       ...showcaseProjects,
-      ...projects.filter((project) => !projectIds.has(project.id)),
+      ...projects.filter((project) => !showcaseProjectIds.has(project.id)),
     ];
   }, [projects]);
 
